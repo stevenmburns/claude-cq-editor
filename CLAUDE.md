@@ -131,6 +131,46 @@ result = cq.Workplane("XY").box(10,10,10).add(other_solid)
 .cskHole(diameter, cskDiameter, cskAngle)    # Countersink
 ```
 
+### Polar and Rectangular Arrays
+
+```python
+# Polar: place features at equal angles around a circle
+.polarArray(radius, startAngle, angle, count)
+
+# Rectangular: grid of features
+.rarray(xSpacing, ySpacing, xCount, yCount)
+```
+
+Both position the workplane at each point — chain `.hole()`, `.circle().extrude()`, etc. after.
+
+### Revolve Profile Pattern
+
+Draw the cross-section in the XZ plane (X = radius, Z = height), close it to the axis, then revolve around Y:
+
+```python
+profile = (
+    cq.Workplane("XZ")
+    .moveTo(0, 0)
+    .lineTo(outerR, 0)
+    .lineTo(outerR, height)
+    .lineTo(0, height)
+    .close()
+    .revolve(360, (0, 0, 0), (0, 1, 0))
+)
+```
+
+The profile must be closed and must not cross the axis of revolution.
+
+### Shell Pattern
+
+Select the face to open, then call `shell()` with a negative thickness to shell inward:
+
+```python
+body = solid.faces(">Z").shell(-wall_thickness)
+```
+
+Apply fillets/chamfers **before** `shell()` — shelling restructures edge topology and makes post-shell edge selection unreliable.
+
 ### 2D Sketch Operations (for extrude/revolve)
 
 ```python
@@ -215,7 +255,7 @@ assy.export("assembly.step")   # STEP preserves assembly structure
 1. Sketch the base profile on a named workplane
 2. `extrude()` or `revolve()` into 3D
 3. Select faces with string selectors and add/cut features
-4. Apply `fillet()` or `chamfer()` to edges before `shell()` — shelling restructures edge topology, making post-shell edge selection unreliable. Fillets after boolean cuts (hole, cut) are generally fine.
+4. Apply `fillet()` or `chamfer()` before `shell()` (see Shell Pattern above)
 5. Export with `cq.exporters.export(result, "name.stl")`
 
 ## STL Export Settings
