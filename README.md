@@ -18,6 +18,14 @@ flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.f
 sudo flatpak install flathub net.meshlab.MeshLab
 ```
 
+**OrcaSlicer** (AppImage, for slicing and sending to printer):
+```bash
+# Download v2.3.1 AppImage for Ubuntu 24.04
+curl -L -o ~/OrcaSlicer.AppImage \
+  https://github.com/OrcaSlicer/OrcaSlicer/releases/download/v2.3.1/OrcaSlicer_Linux_AppImage_Ubuntu2404_V2.3.1.AppImage
+chmod +x ~/OrcaSlicer.AppImage
+```
+
 ## Usage
 
 **Interactive GUI** (live preview as you edit):
@@ -36,9 +44,24 @@ f3d output.stl                          # fast viewer
 flatpak run net.meshlab.MeshLab output.stl  # mesh inspection
 ```
 
+**Headless slice with OrcaSlicer** (Elegoo Centauri Carbon, 0.4mm, PETG Pro, 0.2mm layers):
+```bash
+~/OrcaSlicer.AppImage --appimage-mount &
+MPID=$! ; sleep 5
+MOUNT=$(ls -d /tmp/.mount_OrcaSl* | head -1)
+DISPLAY= ~/OrcaSlicer.AppImage \
+  --load-settings "$MOUNT/resources/profiles/Elegoo/machine/ECC/Elegoo Centauri Carbon 0.4 nozzle.json;$MOUNT/resources/profiles/Elegoo/process/ECC/0.20mm Standard @Elegoo CC 0.4 nozzle.json" \
+  --load-filaments "$MOUNT/resources/profiles/Elegoo/filament/EC/Elegoo PETG PRO @EC.json" \
+  --slice 0 --outputdir ./  model.stl
+kill $MPID
+```
+
+**Printer:** Elegoo Centauri Carbon at `192.168.1.38` — connect via OrcaSlicer GUI.
+
 ## Models
 
 | File | Description |
 |------|-------------|
 | `test_model.py` | Box with counterbored hole and filleted edges |
 | `mechanical_test.py` | Flanged pipe fitting — revolve + shell + polar bolt pattern |
+| `plate.py` | Rounded-corner plate with center hole (parameterized) |

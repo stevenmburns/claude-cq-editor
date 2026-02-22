@@ -56,6 +56,43 @@ cq.exporters.export(result, "output.stl")
 
 CQ-editor also has File → Export STL directly from the GUI.
 
+## Slicing and Printing
+
+**OrcaSlicer** is installed as an AppImage at `~/OrcaSlicer.AppImage` (v2.3.1, Ubuntu 24.04 build).
+
+**Printer:** Elegoo Centauri Carbon at `192.168.1.38` (WiFi). Connect via OrcaSlicer GUI or use the headless CLI below.
+
+**Headless slicing** (mount the AppImage to access bundled profiles, then slice):
+```bash
+~/OrcaSlicer.AppImage --appimage-mount &
+MPID=$! ; sleep 5
+MOUNT=$(ls -d /tmp/.mount_OrcaSl* | head -1)
+
+DISPLAY= ~/OrcaSlicer.AppImage \
+  --load-settings "$MOUNT/resources/profiles/Elegoo/machine/ECC/Elegoo Centauri Carbon 0.4 nozzle.json;$MOUNT/resources/profiles/Elegoo/process/ECC/0.20mm Standard @Elegoo CC 0.4 nozzle.json" \
+  --load-filaments "$MOUNT/resources/profiles/Elegoo/filament/EC/Elegoo PETG PRO @EC.json" \
+  --slice 0 \
+  --outputdir /tmp/orca_out \
+  model.stl
+
+kill $MPID
+```
+
+Other available process profiles (in `$MOUNT/resources/profiles/Elegoo/process/ECC/`):
+- `0.12mm Fine @Elegoo CC 0.4 nozzle.json` — fine detail
+- `0.20mm Standard @Elegoo CC 0.4 nozzle.json` — general use
+- `0.24mm Draft @Elegoo CC 0.4 nozzle.json` — fast prototyping
+
+Other filaments (in `$MOUNT/resources/profiles/Elegoo/filament/EC/`):
+- `Elegoo PLA @EC.json`
+- `Elegoo PETG PRO @EC.json`
+- `Elegoo ASA @EC.json`
+
+**Render G-code preview to check stats:**
+```bash
+grep "estimated\|filament used" output.gcode
+```
+
 ## Rendering STL Files
 
 **F3D** — fast viewer, use for quick inspection:
