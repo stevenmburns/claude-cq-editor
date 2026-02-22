@@ -1,0 +1,3 @@
+*.stl
+.venv/
+__pycache__/
