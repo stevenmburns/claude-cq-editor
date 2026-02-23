@@ -11,7 +11,7 @@ This repository is a Python package (`cq-models`) for generating 3D-printable ST
 ```
 src/cq_models/       # installable package
     bracket.py       # make_bracket() + 'bracket' CLI entry point
-    u_cutter.py      # make_u_cutter() reusable component
+    u_cutter.py      # make_u_cutter() reusable component with swept wire-retention arms
 test/
     test_bracket.py  # pytest geometry tests
     test_u_cutter.py # pytest geometry tests
@@ -93,7 +93,8 @@ def test_valid():
 
 def test_bbox():
     bb = make_bracket(outer=60, height=3).val().BoundingBox()
-    assert abs(bb.xlen - 60) < 0.1
+    # bracket has a loop at (outer, outer) with radius 10, so xlen/ylen = outer + 10
+    assert abs(bb.xlen - 70) < 0.1
     assert abs(bb.zlen - 3) < 0.1
 ```
 
@@ -240,6 +241,20 @@ profile = (
 ```
 
 The profile must be closed and must not cross the axis of revolution.
+
+### Sweep Profile Positioning
+
+`moveTo()` on the profile Workplane only moves a 2D cursor — it does **not** set the profile's 3D position. Use the `origin` parameter on the Workplane constructor to place the profile at the correct world-space location:
+
+```python
+# Path along X at z=height
+path = cq.Workplane("XZ").moveTo(-5, height).lineTo(5, height)
+
+# Profile placed at the path's start point in world coordinates
+swept = cq.Workplane("YZ", origin=(-5, 0, height)).circle(radius).sweep(path)
+```
+
+The `origin` tuple is `(world_x, world_y, world_z)` and must match the path's start point. For a path in "XZ" traveling along X, the profile plane is "YZ" and `origin[0]` selects the start X position.
 
 ### Shell Pattern
 
