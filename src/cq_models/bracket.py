@@ -12,6 +12,7 @@ def make_bracket(
     slot_w=5,
     base_d=1,
     cut_offset=10,
+    n_cuts=2,
 ):
     """Parametric L-bracket with U-slot cuts.
 
@@ -24,6 +25,7 @@ def make_bracket(
         slot_w: slot opening width (mm)
         base_d: U base thickness — closed end of U (mm)
         cut_offset: offset of cut from inner edge of each arm (mm)
+        n_cuts: number of U-cuts per arm, equally spaced along the arm
     """
     outer_body = (
         cq.Workplane("XY")
@@ -41,17 +43,22 @@ def make_bracket(
 
     bracket = outer_body.cut(inner_body)
 
-    top_cutter = (
-        make_u_cutter(height, body_w, body_d, slot_w, base_d)
-        .translate((outer / 2, inner + cut_offset + body_d / 2, 0))
-    )
-    right_cutter = (
-        make_u_cutter(height, body_w, body_d, slot_w, base_d)
-        .rotate((0, 0, 0), (0, 0, 1), -90)
-        .translate((inner + cut_offset + body_d / 2, inner / 2, 0))
-    )
+    for i in range(n_cuts):
+        x = (i + 1) * outer / (n_cuts + 1)
+        bracket = bracket.cut(
+            make_u_cutter(height, body_w, body_d, slot_w, base_d)
+            .translate((x, inner + cut_offset + body_d / 2, 0))
+        )
 
-    return bracket.cut(top_cutter).cut(right_cutter)
+    for i in range(n_cuts):
+        y = (i + 1) * outer / (n_cuts + 1)
+        bracket = bracket.cut(
+            make_u_cutter(height, body_w, body_d, slot_w, base_d)
+            .rotate((0, 0, 0), (0, 0, 1), -90)
+            .translate((inner + cut_offset + body_d / 2, y, 0))
+        )
+
+    return bracket
 
 
 # show_object is injected by cq-editor; this guard displays the model
