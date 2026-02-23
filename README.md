@@ -68,5 +68,5 @@ kill $MPID
 
 | Module | Description |
 |--------|-------------|
-| `src/cq_models/bracket.py` | Parametric L-bracket with equally spaced U-slot cuts per arm |
-| `src/cq_models/u_cutter.py` | Reusable U-shaped cutter component |
+| `src/cq_models/bracket.py` | Parametric L-bracket with U-slot cuts per arm and a mounting loop at the outer corner |
+| `src/cq_models/u_cutter.py` | Reusable U-shaped cutter with wire-retention arms swept along the top and bottom edges |

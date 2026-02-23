@@ -8,9 +8,9 @@ def make_bracket(
     inner=40,
     height=3,
     body_w=10,
-    body_d=5,
+    body_d=8,
     slot_w=5,
-    base_d=1,
+    base_d=2,
     cut_offset=10,
     n_cuts=2,
 ):
@@ -44,21 +44,37 @@ def make_bracket(
     bracket = outer_body.cut(inner_body)
 
     for i in range(n_cuts):
-        x = (i + 1) * outer / (n_cuts + 1)
+        x = (i + 0.75) * outer / (n_cuts + 1)
         bracket = bracket.cut(
             make_u_cutter(height, body_w, body_d, slot_w, base_d)
-            .translate((x, inner + cut_offset + body_d / 2, 0))
+            .translate((x, inner + cut_offset, 0))
         )
 
     for i in range(n_cuts):
-        y = (i + 1) * outer / (n_cuts + 1)
+        y = (i + 0.75) * outer / (n_cuts + 1)
         bracket = bracket.cut(
             make_u_cutter(height, body_w, body_d, slot_w, base_d)
             .rotate((0, 0, 0), (0, 0, 1), -90)
-            .translate((inner + cut_offset + body_d / 2, y, 0))
+            .translate((inner + cut_offset, y, 0))
         )
 
-    return bracket
+    # Add loop on end
+    
+    loop_body = (
+        cq.Workplane("XY")
+        .moveTo(outer, outer)
+        .circle(10)
+        .extrude(height)
+    )
+
+    loop_cut = (
+        cq.Workplane("XY")
+        .moveTo(outer, outer)
+        .circle(6)
+        .extrude(height)
+    )
+
+    return (bracket.union(loop_body)).cut(loop_cut)
 
 
 # show_object is injected by cq-editor; this guard displays the model
