@@ -64,6 +64,8 @@ def make_bracket(
     return bracket.cut(top_cutter).cut(right_cutter)
 
 
+# show_object is injected by cq-editor; this guard displays the model
+# in the GUI without building it on plain import or test runs.
 if "show_object" in dir():
     show_object(make_bracket())
 
