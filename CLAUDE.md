@@ -11,8 +11,10 @@ This repository is a Python package (`cq-models`) for generating 3D-printable ST
 ```
 src/cq_models/       # installable package
     bracket.py       # make_bracket() + 'bracket' CLI entry point
+    u_cutter.py      # make_u_cutter() reusable component
 test/
     test_bracket.py  # pytest geometry tests
+    test_u_cutter.py # pytest geometry tests
 pyproject.toml       # setuptools config, entry points, dev deps
 ```
 
