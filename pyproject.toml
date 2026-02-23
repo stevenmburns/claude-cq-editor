@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cq-models"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["cadquery"]
+
+[project.scripts]
+bracket = "cq_models.bracket:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]

@@ -4,7 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Purpose
 
-This repository contains Python scripts for generating 3D-printable STL models using CadQuery / CQ-editor. The workflow is: write a Python script using the CadQuery API, view and iterate in CQ-editor's GUI, then export to STL for printing.
+This repository is a Python package (`cq-models`) for generating 3D-printable STL models using CadQuery / CQ-editor. The workflow is: implement a model as a function in `src/cq_models/`, iterate visually in CQ-editor's GUI, run `pytest` to validate geometry, then export to STL for printing.
+
+## Project Structure
+
+```
+src/cq_models/       # installable package
+    bracket.py       # make_bracket() + 'bracket' CLI entry point
+test/
+    test_bracket.py  # pytest geometry tests
+pyproject.toml       # setuptools config, entry points, dev deps
+```
 
 ## Installation
 
@@ -12,6 +22,7 @@ This repository contains Python scripts for generating 3D-printable STL models u
 python3 -m venv .venv
 source .venv/bin/activate
 pip install cq-editor
+pip install -e ".[dev]"   # installs the package + pytest
 ```
 
 **STL renderers** (system packages, not in venv):
@@ -31,23 +42,28 @@ source .venv/bin/activate
 
 Or invoke directly without activating:
 ```bash
-.venv/bin/python model.py
-.venv/bin/cq-editor model.py
+.venv/bin/bracket
+.venv/bin/cq-editor src/cq_models/bracket.py
 ```
 
 ## Running and Exporting
 
 **CQ-editor GUI** (recommended for iterating):
 ```bash
-cq-editor model.py
+cq-editor src/cq_models/bracket.py
 ```
 
-**Headless script execution** (for batch/export):
+**Export to STL** (via CLI entry point):
 ```bash
-python model.py
+bracket
 ```
 
-**Export to STL from within a script:**
+**Run tests:**
+```bash
+pytest
+```
+
+**Export to STL from within a module:**
 ```python
 import cadquery as cq
 result = cq.Workplane("XY").box(10, 10, 10)
@@ -55,6 +71,31 @@ cq.exporters.export(result, "output.stl")
 ```
 
 CQ-editor also has File → Export STL directly from the GUI.
+
+## Adding a New Model
+
+1. Create `src/cq_models/<name>.py` with a `make_<name>(**params)` function and a `main()` that calls it and exports STL
+2. Add a `[project.scripts]` entry in `pyproject.toml`: `<name> = "cq_models.<name>:main"`
+3. Re-run `pip install -e ".[dev]"` to register the new entry point
+4. Add `test/test_<name>.py` with geometry assertions (`isValid()`, bounding box, volume)
+
+## Testing
+
+Models are tested by asserting on the CadQuery solid's geometric properties — no visual comparison needed:
+
+```python
+from cq_models.bracket import make_bracket
+
+def test_valid():
+    assert make_bracket().val().isValid()
+
+def test_bbox():
+    bb = make_bracket(outer=60, height=3).val().BoundingBox()
+    assert abs(bb.xlen - 60) < 0.1
+    assert abs(bb.zlen - 3) < 0.1
+```
+
+Useful properties to assert on: `isValid()`, `BoundingBox()` (xlen/ylen/zlen), `Volume()`.
 
 ## Slicing and Printing
 
@@ -289,11 +330,12 @@ assy.export("assembly.step")   # STEP preserves assembly structure
 
 ## Typical Model Recipe
 
-1. Sketch the base profile on a named workplane
-2. `extrude()` or `revolve()` into 3D
-3. Select faces with string selectors and add/cut features
-4. Apply `fillet()` or `chamfer()` before `shell()` (see Shell Pattern above)
-5. Export with `cq.exporters.export(result, "name.stl")`
+1. Create `src/cq_models/<name>.py` with a `make_<name>(**params)` function
+2. Sketch the base profile on a named workplane inside the function
+3. `extrude()` or `revolve()` into 3D
+4. Select faces with string selectors and add/cut features
+5. Apply `fillet()` or `chamfer()` before `shell()` (see Shell Pattern above)
+6. Return the result; export in `main()` via `cq.exporters.export(result, "name.stl")`
 
 ## STL Export Settings
 

@@ -1,3 +1,8 @@
 *.stl
 .venv/
 __pycache__/
+*.png
+*.json
+*.gcode
+*.egg-info/
+.pytest_cache/
