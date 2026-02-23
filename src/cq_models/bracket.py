@@ -14,6 +14,7 @@ def make_bracket(
     cut_offset=10,
     n_cuts=2,
     loop_offset=5,
+    fillet_r=3,
 ):
     """Parametric L-bracket with U-slot cuts.
 
@@ -28,12 +29,15 @@ def make_bracket(
         cut_offset: offset of cut from inner edge of each arm (mm)
         n_cuts: number of U-cuts per arm, equally spaced along the arm
         loop_offset: distance the loop center is set back from the outer corner of the bracket (mm)
+        fillet_r: fillet radius on the outer corners (mm), 0 to disable
     """
     outer_body = (
         cq.Workplane("XY")
         .moveTo(outer / 2, outer / 2)
         .rect(outer, outer)
         .extrude(height)
+        .edges("|Z")
+        .fillet(fillet_r)
     )
 
     inner_body = (
