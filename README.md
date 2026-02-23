@@ -62,6 +62,4 @@ kill $MPID
 
 | File | Description |
 |------|-------------|
-| `test_model.py` | Box with counterbored hole and filleted edges |
-| `mechanical_test.py` | Flanged pipe fitting — revolve + shell + polar bolt pattern |
-| `plate.py` | Rounded-corner plate with center hole (parameterized) |
+| `bracket.py` | Parametric L-bracket with U-slot cuts |
