@@ -1,3 +1,6 @@
 *.stl
 .venv/
 __pycache__/
+*.png
+*.json
+*.gcode
