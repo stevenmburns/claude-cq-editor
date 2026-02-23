@@ -64,6 +64,12 @@ def make_bracket(
     return bracket.cut(top_cutter).cut(right_cutter)
 
 
+try:
+    show_object(make_bracket())
+except NameError:
+    pass  # not running in cq-editor
+
+
 def main():
     result = make_bracket()
     cq.exporters.export(result, "bracket.stl")
