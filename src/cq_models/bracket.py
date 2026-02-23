@@ -64,10 +64,8 @@ def make_bracket(
     return bracket.cut(top_cutter).cut(right_cutter)
 
 
-try:
+if "show_object" in dir():
     show_object(make_bracket())
-except NameError:
-    pass  # not running in cq-editor
 
 
 def main():
