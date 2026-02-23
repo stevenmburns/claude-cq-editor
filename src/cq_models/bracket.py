@@ -13,6 +13,7 @@ def make_bracket(
     base_d=2,
     cut_offset=10,
     n_cuts=2,
+    loop_offset=5,
 ):
     """Parametric L-bracket with U-slot cuts.
 
@@ -26,6 +27,7 @@ def make_bracket(
         base_d: U base thickness — closed end of U (mm)
         cut_offset: offset of cut from inner edge of each arm (mm)
         n_cuts: number of U-cuts per arm, equally spaced along the arm
+        loop_offset: distance the loop center is set back from the outer corner of the bracket (mm)
     """
     outer_body = (
         cq.Workplane("XY")
@@ -59,17 +61,19 @@ def make_bracket(
         )
 
     # Add loop on end
-    
+    loop_cx = outer - loop_offset
+    loop_cy = outer - loop_offset
+
     loop_body = (
         cq.Workplane("XY")
-        .moveTo(outer, outer)
+        .moveTo(loop_cx, loop_cy)
         .circle(10)
         .extrude(height)
     )
 
     loop_cut = (
         cq.Workplane("XY")
-        .moveTo(outer, outer)
+        .moveTo(loop_cx, loop_cy)
         .circle(6)
         .extrude(height)
     )

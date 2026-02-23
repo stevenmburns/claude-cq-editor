@@ -10,9 +10,9 @@ def test_default_bracket_is_valid():
 def test_bounding_box_matches_params():
     result = make_bracket(outer=60, inner=40, height=3)
     bb = result.val().BoundingBox()
-    # loop at (outer, outer) with radius 10 extends 10mm past outer in each axis
-    assert abs(bb.xlen - 70) < 0.1
-    assert abs(bb.ylen - 70) < 0.1
+    # loop center at (outer - loop_offset, outer - loop_offset), default loop_offset=5, radius=10
+    assert abs(bb.xlen - 65) < 0.1
+    assert abs(bb.ylen - 65) < 0.1
     assert abs(bb.zlen - 3) < 0.1
 
 
