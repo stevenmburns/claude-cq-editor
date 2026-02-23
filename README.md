@@ -1,6 +1,6 @@
 # claude-cq-editor
 
-Python scripts for generating 3D-printable STL models using [CadQuery](https://cadquery.readthedocs.io/) and CQ-editor, developed with Claude Code.
+Python package for generating 3D-printable STL models using [CadQuery](https://cadquery.readthedocs.io/) and CQ-editor, developed with Claude Code.
 
 ## Setup
 
@@ -8,6 +8,7 @@ Python scripts for generating 3D-printable STL models using [CadQuery](https://c
 python3 -m venv .venv
 source .venv/bin/activate
 pip install cq-editor
+pip install -e ".[dev]"
 ```
 
 STL renderers (system packages):
@@ -30,18 +31,23 @@ chmod +x ~/OrcaSlicer.AppImage
 
 **Interactive GUI** (live preview as you edit):
 ```bash
-cq-editor model.py
+cq-editor src/cq_models/bracket.py
 ```
 
-**Headless export to STL:**
+**Export to STL:**
 ```bash
-python model.py
+bracket
+```
+
+**Run tests:**
+```bash
+pytest
 ```
 
 **View the result:**
 ```bash
-f3d output.stl                          # fast viewer
-flatpak run net.meshlab.MeshLab output.stl  # mesh inspection
+f3d bracket.stl                             # fast viewer
+flatpak run net.meshlab.MeshLab bracket.stl # mesh inspection
 ```
 
 **Headless slice with OrcaSlicer** (Elegoo Centauri Carbon, 0.4mm, PETG Pro, 0.2mm layers):
@@ -52,7 +58,7 @@ MOUNT=$(ls -d /tmp/.mount_OrcaSl* | head -1)
 DISPLAY= ~/OrcaSlicer.AppImage \
   --load-settings "$MOUNT/resources/profiles/Elegoo/machine/ECC/Elegoo Centauri Carbon 0.4 nozzle.json;$MOUNT/resources/profiles/Elegoo/process/ECC/0.20mm Standard @Elegoo CC 0.4 nozzle.json" \
   --load-filaments "$MOUNT/resources/profiles/Elegoo/filament/EC/Elegoo PETG PRO @EC.json" \
-  --slice 0 --outputdir ./  model.stl
+  --slice 0 --outputdir ./  bracket.stl
 kill $MPID
 ```
 
@@ -60,6 +66,6 @@ kill $MPID
 
 ## Models
 
-| File | Description |
-|------|-------------|
-| `bracket.py` | Parametric L-bracket with U-slot cuts |
+| Module | Description |
+|--------|-------------|
+| `src/cq_models/bracket.py` | Parametric L-bracket with U-slot cuts |
