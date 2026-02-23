@@ -1,5 +1,7 @@
 import cadquery as cq
 
+from cq_models.u_cutter import make_u_cutter
+
 
 def make_bracket(
     outer=60,
@@ -39,24 +41,12 @@ def make_bracket(
 
     bracket = outer_body.cut(inner_body)
 
-    def make_u_cutter():
-        body = (
-            cq.Workplane("XY")
-            .moveTo(0, body_d / 2)
-            .rect(body_w, body_d)
-            .extrude(height)
-        )
-        slot = (
-            cq.Workplane("XY")
-            .moveTo(0, (body_d - base_d) / 2)
-            .rect(slot_w, body_d - base_d)
-            .extrude(height)
-        )
-        return body.cut(slot)
-
-    top_cutter = make_u_cutter().translate((outer / 2, inner + cut_offset, 0))
+    top_cutter = (
+        make_u_cutter(height, body_w, body_d, slot_w, base_d)
+        .translate((outer / 2, inner + cut_offset, 0))
+    )
     right_cutter = (
-        make_u_cutter()
+        make_u_cutter(height, body_w, body_d, slot_w, base_d)
         .rotate((0, 0, 0), (0, 0, 1), -90)
         .translate((inner + cut_offset, inner / 2, 0))
     )
