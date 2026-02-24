@@ -27,6 +27,7 @@ def make_bracket(
         slot_w: slot opening width (mm)
         base_d: U base thickness — closed end of U (mm)
         n_cuts: number of U-cuts per arm, equally spaced along the arm
+        (cut_offset is derived as (outer - inner) / 2 — not a parameter)
         loop_offset: distance the loop center is set back from the outer corner of the bracket (mm)
         fillet_r: fillet radius on vertical corners (mm)
         roundover_r: fillet radius on top/bottom face edges (mm), must be < height/2

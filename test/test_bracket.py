@@ -29,5 +29,5 @@ def test_volume_positive():
 
 
 def test_custom_params_produce_valid_bracket():
-    result = make_bracket(outer=80, inner=50, height=5, cut_offset=15)
+    result = make_bracket(outer=80, inner=50, height=5)
     assert result.val().isValid()
