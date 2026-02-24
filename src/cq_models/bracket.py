@@ -5,13 +5,13 @@ from cq_models.u_cutter import make_u_cutter
 
 def make_bracket(
     outer=60,
-    inner=40,
+    inner=44,
     height=3,
     body_w=10,
     body_d=8,
     slot_w=5,
     base_d=2,
-    cut_offset=10,
+    cut_offset=8,
     n_cuts=2,
     loop_offset=5,
     fillet_r=3,
