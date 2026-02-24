@@ -11,7 +11,6 @@ def make_bracket(
     body_d=8,
     slot_w=5,
     base_d=2,
-    cut_offset=8,
     n_cuts=2,
     loop_offset=5,
     fillet_r=3,
@@ -27,7 +26,6 @@ def make_bracket(
         body_d: depth of cut into arm (mm)
         slot_w: slot opening width (mm)
         base_d: U base thickness — closed end of U (mm)
-        cut_offset: offset of cut from inner edge of each arm (mm)
         n_cuts: number of U-cuts per arm, equally spaced along the arm
         loop_offset: distance the loop center is set back from the outer corner of the bracket (mm)
         fillet_r: fillet radius on vertical corners (mm)
@@ -46,6 +44,8 @@ def make_bracket(
         .rect(inner, inner)
         .extrude(height)
     )
+
+    cut_offset = (outer - inner) / 2
 
     bracket = outer_body.cut(inner_body).edges("|Z").fillet(fillet_r)
 
