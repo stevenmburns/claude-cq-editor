@@ -38,8 +38,6 @@ def make_bracket(
         .moveTo(outer / 2, outer / 2)
         .rect(outer, outer)
         .extrude(height)
-        .edges("|Z")
-        .fillet(fillet_r)
     )
 
     inner_body = (
@@ -49,10 +47,7 @@ def make_bracket(
         .extrude(height)
     )
 
-    bracket = outer_body.cut(inner_body)
-
-    for pt in [(inner, inner, height / 2), (inner, 0, height / 2), (0, inner, height / 2)]:
-        bracket = bracket.edges(cq.selectors.NearestToPointSelector(pt)).fillet(fillet_r)
+    bracket = outer_body.cut(inner_body).edges("|Z").fillet(fillet_r)
 
 
 
