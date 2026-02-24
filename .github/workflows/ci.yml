@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}   # required for conda env activation
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          activate-environment: cq
+          python-version: "3.10"
+
+      - name: Install cadquery via conda-forge
+        run: mamba install -y -c conda-forge cadquery
+
+      - name: Install package and dev deps
+        run: pip install --no-deps -e ".[dev]"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Ruff
+        run: ruff check src/ test/
+
+      - name: Tests
+        run: pytest
