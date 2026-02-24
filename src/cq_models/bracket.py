@@ -96,7 +96,7 @@ def make_bracket(
 # show_object is injected by cq-editor; this guard displays the model
 # in the GUI without building it on plain import or test runs.
 if "show_object" in dir():
-    show_object(make_bracket())
+    show_object(make_bracket())  # noqa: F821
 
 
 def main():

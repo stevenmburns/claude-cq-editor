@@ -1,4 +1,3 @@
-import pytest
 from cq_models.bracket import make_bracket
 
 
