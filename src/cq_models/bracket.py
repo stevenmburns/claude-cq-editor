@@ -15,6 +15,7 @@ def make_bracket(
     n_cuts=2,
     loop_offset=5,
     fillet_r=3,
+    roundover_r=1,
 ):
     """Parametric L-bracket with U-slot cuts.
 
@@ -29,7 +30,8 @@ def make_bracket(
         cut_offset: offset of cut from inner edge of each arm (mm)
         n_cuts: number of U-cuts per arm, equally spaced along the arm
         loop_offset: distance the loop center is set back from the outer corner of the bracket (mm)
-        fillet_r: fillet radius on the outer corners (mm), 0 to disable
+        fillet_r: fillet radius on vertical corners (mm)
+        roundover_r: fillet radius on top/bottom face edges (mm), must be < height/2
     """
     outer_body = (
         cq.Workplane("XY")
@@ -49,20 +51,10 @@ def make_bracket(
 
     bracket = outer_body.cut(inner_body)
 
-    for i in range(n_cuts):
-        x = (i + 0.75) * outer / (n_cuts + 1)
-        bracket = bracket.cut(
-            make_u_cutter(height, body_w, body_d, slot_w, base_d)
-            .translate((x, inner + cut_offset, 0))
-        )
+    for pt in [(inner, inner, height / 2), (inner, 0, height / 2), (0, inner, height / 2)]:
+        bracket = bracket.edges(cq.selectors.NearestToPointSelector(pt)).fillet(fillet_r)
 
-    for i in range(n_cuts):
-        y = (i + 0.75) * outer / (n_cuts + 1)
-        bracket = bracket.cut(
-            make_u_cutter(height, body_w, body_d, slot_w, base_d)
-            .rotate((0, 0, 0), (0, 0, 1), -90)
-            .translate((inner + cut_offset, y, 0))
-        )
+
 
     # Add loop on end
     loop_cx = outer - loop_offset
@@ -82,7 +74,32 @@ def make_bracket(
         .extrude(height)
     )
 
-    return (bracket.union(loop_body)).cut(loop_cut)
+    bracket = bracket.edges("#Z").fillet(roundover_r)
+
+    bracket = bracket.union(loop_body).cut(loop_cut)
+
+    # Fillet inner hole top and bottom edges (center of mass = loop center)
+    for z_val in [0, height]:
+        bracket = bracket.edges(
+            cq.selectors.NearestToPointSelector((loop_cx, loop_cy, z_val))
+        ).fillet(roundover_r)
+
+    for i in range(n_cuts):
+        x = (i + 0.75) * outer / (n_cuts + 1)
+        bracket = bracket.cut(
+            make_u_cutter(height, body_w, body_d, slot_w, base_d)
+            .translate((x, inner + cut_offset, 0))
+        )
+
+    for i in range(n_cuts):
+        y = (i + 0.75) * outer / (n_cuts + 1)
+        bracket = bracket.cut(
+            make_u_cutter(height, body_w, body_d, slot_w, base_d)
+            .rotate((0, 0, 0), (0, 0, 1), -90)
+            .translate((inner + cut_offset, y, 0))
+        )
+
+    return bracket
 
 
 # show_object is injected by cq-editor; this guard displays the model
