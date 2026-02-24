@@ -74,15 +74,10 @@ def make_bracket(
         .extrude(height)
     )
 
-    bracket = bracket.edges("#Z").fillet(roundover_r)
-
     bracket = bracket.union(loop_body).cut(loop_cut)
 
-    # Fillet inner hole top and bottom edges (center of mass = loop center)
-    for z_val in [0, height]:
-        bracket = bracket.edges(
-            cq.selectors.NearestToPointSelector((loop_cx, loop_cy, z_val))
-        ).fillet(roundover_r)
+    for face_sel in [">Z", "<Z"]:
+        bracket = bracket.faces(face_sel).edges().fillet(roundover_r)
 
     for i in range(n_cuts):
         x = (i + 0.75) * outer / (n_cuts + 1)
