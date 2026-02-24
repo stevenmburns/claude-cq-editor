@@ -6,3 +6,10 @@ __pycache__/
 *.gcode
 *.egg-info/
 .pytest_cache/
+
+# Editor swap/lock files
+\#*\#
+.\#*
+*.swp
+*.swo
+

@@ -13,6 +13,9 @@ def make_bracket(
     base_d=2,
     cut_offset=10,
     n_cuts=2,
+    loop_offset=5,
+    fillet_r=3,
+    roundover_r=1,
 ):
     """Parametric L-bracket with U-slot cuts.
 
@@ -26,6 +29,9 @@ def make_bracket(
         base_d: U base thickness — closed end of U (mm)
         cut_offset: offset of cut from inner edge of each arm (mm)
         n_cuts: number of U-cuts per arm, equally spaced along the arm
+        loop_offset: distance the loop center is set back from the outer corner of the bracket (mm)
+        fillet_r: fillet radius on vertical corners (mm)
+        roundover_r: fillet radius on top/bottom face edges (mm), must be < height/2
     """
     outer_body = (
         cq.Workplane("XY")
@@ -41,7 +47,32 @@ def make_bracket(
         .extrude(height)
     )
 
-    bracket = outer_body.cut(inner_body)
+    bracket = outer_body.cut(inner_body).edges("|Z").fillet(fillet_r)
+
+
+
+    # Add loop on end
+    loop_cx = outer - loop_offset
+    loop_cy = outer - loop_offset
+
+    loop_body = (
+        cq.Workplane("XY")
+        .moveTo(loop_cx, loop_cy)
+        .circle(10)
+        .extrude(height)
+    )
+
+    loop_cut = (
+        cq.Workplane("XY")
+        .moveTo(loop_cx, loop_cy)
+        .circle(6)
+        .extrude(height)
+    )
+
+    bracket = bracket.union(loop_body).cut(loop_cut)
+
+    for face_sel in [">Z", "<Z"]:
+        bracket = bracket.faces(face_sel).edges().fillet(roundover_r)
 
     for i in range(n_cuts):
         x = (i + 0.75) * outer / (n_cuts + 1)
@@ -58,23 +89,7 @@ def make_bracket(
             .translate((inner + cut_offset, y, 0))
         )
 
-    # Add loop on end
-    
-    loop_body = (
-        cq.Workplane("XY")
-        .moveTo(outer, outer)
-        .circle(10)
-        .extrude(height)
-    )
-
-    loop_cut = (
-        cq.Workplane("XY")
-        .moveTo(outer, outer)
-        .circle(6)
-        .extrude(height)
-    )
-
-    return (bracket.union(loop_body)).cut(loop_cut)
+    return bracket
 
 
 # show_object is injected by cq-editor; this guard displays the model
