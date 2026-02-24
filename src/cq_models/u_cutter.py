@@ -46,7 +46,7 @@ def make_u_cutter(height=3, body_w=10, body_d=8, slot_w=5, base_d=2):
 # show_object is injected by cq-editor; this guard displays the model
 # in the GUI without building it on plain import or test runs.
 if "show_object" in dir():
-    show_object(make_u_cutter())
+    show_object(make_u_cutter())  # noqa: F821
 
 def main():
     result = make_u_cutter()
