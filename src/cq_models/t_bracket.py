@@ -4,10 +4,9 @@ from cq_models.u_cutter import make_u_cutter
 
 
 def make_t_bracket(
-    outer=60,
-    inner=44,
-    height=3,
+    arm_w=16,
     arm_len=60,
+    height=3,
     body_w=10,
     body_d=8,
     slot_w=5,
@@ -23,10 +22,9 @@ def make_t_bracket(
     rising from the center.  Three arm ends: left, right, and top.
 
     Args:
-        outer: controls arm thickness as outer - inner (mm)
-        inner: controls arm thickness as outer - inner (mm)
-        height: bracket thickness (mm)
+        arm_w: width (thickness) of each arm (mm)
         arm_len: length of each arm from the centre junction (mm)
+        height: bracket thickness (mm)
         body_w: U-cutter width along arm (mm)
         body_d: depth of cut into arm (mm)
         slot_w: slot opening width (mm)
@@ -36,10 +34,6 @@ def make_t_bracket(
         fillet_r: fillet radius on vertical corners (mm)
         roundover_r: fillet radius on top/bottom face edges (mm), must be < height/2
     """
-    arm_w = outer - inner  # thickness of each arm
-    cut_offset = (
-        arm_w / 2
-    )  # distance from arm face to cutter centre (same as L-bracket)
 
     # Horizontal bar: 2×arm_len wide × arm_w tall
     h_bar = (
@@ -71,21 +65,21 @@ def make_t_bracket(
     for face_sel in [">Z", "<Z"]:
         bracket = bracket.faces(face_sel).edges().fillet(roundover_r)
 
-    # U-cuts on left horizontal arm (x: 0 → arm_len, centred in y at cut_offset)
+    # U-cuts on left horizontal arm (x: 0 → arm_len, centred in y at arm_w/2)
     for i in range(n_cuts):
         x = (i + 1) * arm_len / (n_cuts + 1)
         bracket = bracket.cut(
             make_u_cutter(height, body_w, body_d, slot_w, base_d).translate(
-                (x, cut_offset, 0)
+                (x, arm_w / 2, 0)
             )
         )
 
-    # U-cuts on right horizontal arm (x: arm_len → 2×arm_len, centred in y at cut_offset)
+    # U-cuts on right horizontal arm (x: arm_len → 2×arm_len, centred in y at arm_w/2)
     for i in range(n_cuts):
         x = arm_len + (i + 1) * arm_len / (n_cuts + 1)
         bracket = bracket.cut(
             make_u_cutter(height, body_w, body_d, slot_w, base_d).translate(
-                (x, cut_offset, 0)
+                (x, arm_w / 2, 0)
             )
         )
 

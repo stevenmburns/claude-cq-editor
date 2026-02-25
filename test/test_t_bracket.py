@@ -7,10 +7,9 @@ def test_default_t_bracket_is_valid():
 
 
 def test_bounding_box_matches_params():
-    outer, inner, height, arm_len = 60, 44, 3, 60
-    result = make_t_bracket(outer=outer, inner=inner, height=height, arm_len=arm_len)
+    arm_w, arm_len, height = 16, 60, 3
+    result = make_t_bracket(arm_w=arm_w, arm_len=arm_len, height=height)
     bb = result.val().BoundingBox()
-    arm_w = outer - inner  # 16
     loop_offset = 0  # default
     # loop centre at (arm_len, loop_offset) = (60, 0), radius=10
     # x: bar = 2×arm_len = 120
@@ -26,13 +25,12 @@ def test_volume_positive():
 
 
 def test_volume_less_than_bounding_box():
-    outer, inner, height, arm_len = 60, 44, 3, 60
-    arm_w = outer - inner
+    arm_w, arm_len, height = 16, 60, 3
     bbox_vol = (2 * arm_len) * (arm_w + arm_len) * height
-    result = make_t_bracket(outer=outer, inner=inner, height=height, arm_len=arm_len)
+    result = make_t_bracket(arm_w=arm_w, arm_len=arm_len, height=height)
     assert result.val().Volume() < bbox_vol
 
 
 def test_custom_params_produce_valid_bracket():
-    result = make_t_bracket(outer=80, inner=50, height=5)
+    result = make_t_bracket(arm_w=20, arm_len=80, height=5)
     assert result.val().isValid()
