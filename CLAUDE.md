@@ -1,7 +1,5 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Project Purpose
 
 Python package (`cq-models`) for generating 3D-printable STL models using CadQuery / CQ-editor. Workflow: implement a model in `src/cq_models/`, iterate visually in CQ-editor, run `pytest` to validate geometry, export to STL for printing.
@@ -29,25 +27,6 @@ pip install cq-editor
 pip install -e ".[dev]"   # installs the package + pytest
 ```
 
-**STL renderers** (system packages, not in venv):
-```bash
-sudo apt install f3d
-flatpak install flathub net.meshlab.MeshLab
-```
-
-## Environment Setup
-
-All commands must be run with the virtual environment active. Direct invocation (no activation needed):
-```bash
-.venv/bin/python -m pytest
-.venv/bin/cq-editor src/cq_models/l_bracket.py
-```
-
-Note: venv shebangs embed absolute paths — if the project directory is renamed, fix with:
-```bash
-grep -rl 'OLD-DIR-NAME' .venv/bin/ | xargs sed -i 's|OLD-DIR-NAME|NEW-DIR-NAME|g'
-```
-
 ## Running and Exporting
 
 ```bash
@@ -65,12 +44,6 @@ CQ-editor displays geometry via `show_object()` (injected builtin) or a variable
 2. Add `[project.scripts]` entry in `pyproject.toml`: `<name> = "cq_models.<name>:main"`
 3. Re-run `pip install -e ".[dev]"` to register the entry point
 4. Add `test/test_<name>.py` asserting on `isValid()`, `BoundingBox()`, `Volume()`
-
-## Testing
-
-```bash
-.venv/bin/python -m pytest -v
-```
 
 ## Slicing and Printing
 
@@ -100,14 +73,6 @@ Process profiles (in `$MOUNT/resources/profiles/Elegoo/process/ECC/`):
 
 Filaments (in `$MOUNT/resources/profiles/Elegoo/filament/EC/`):
 - `Elegoo PLA @EC.json`, `Elegoo PETG PRO @EC.json`, `Elegoo ASA @EC.json`
-
-## Rendering STL Files
-
-```bash
-f3d output.stl                          # fast viewer
-flatpak run net.meshlab.MeshLab output.stl
-f3d --output render.png output.stl      # render to PNG
-```
 
 ## STL Export Settings
 
