@@ -13,12 +13,11 @@ def test_bounding_box_matches_params():
     arm_w = outer - inner  # 16
     stem_len = outer / 2  # 30
     loop_offset = 5  # default
-    # loop centre at (outer/2, arm_w + stem_len - loop_offset) = (30, 41), radius=10
+    # loop centre at (outer/2, loop_offset) = (30, 5), radius=10
     # x: bar dominates → 0 to outer = 60
-    # y: bar bottom at 0, loop top at loop_cy + 10 = 41 + 10 = 51
-    loop_cy = arm_w + stem_len - loop_offset
+    # y: loop bottom at loop_offset - 10 = -5, stem top at arm_w + stem_len = 46
     assert abs(bb.xlen - outer) < 0.5
-    assert abs(bb.ylen - (loop_cy + 10)) < 0.5
+    assert abs(bb.ylen - (arm_w + stem_len + 10 - loop_offset)) < 0.5
     assert abs(bb.zlen - height) < 0.1
 
 

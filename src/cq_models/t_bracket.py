@@ -30,7 +30,7 @@ def make_t_bracket(
         slot_w: slot opening width (mm)
         base_d: U base thickness — closed end of U (mm)
         n_cuts: number of U-cuts per arm, equally spaced along each arm
-        loop_offset: distance the loop center is set back from the top of the stem (mm)
+        loop_offset: distance the loop center is set back from the bottom of the bar (mm)
         fillet_r: fillet radius on vertical corners (mm)
         roundover_r: fillet radius on top/bottom face edges (mm), must be < height/2
     """
@@ -58,9 +58,9 @@ def make_t_bracket(
 
     bracket = h_bar.union(v_stem).edges("|Z").fillet(fillet_r)
 
-    # Loop at the top of the vertical stem
+    # Loop at the bottom of the horizontal bar, opposite the stem
     loop_cx = outer / 2
-    loop_cy = arm_w + stem_len - loop_offset
+    loop_cy = loop_offset
 
     loop_body = cq.Workplane("XY").moveTo(loop_cx, loop_cy).circle(10).extrude(height)
     loop_cut = cq.Workplane("XY").moveTo(loop_cx, loop_cy).circle(6).extrude(height)
