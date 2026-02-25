@@ -11,17 +11,8 @@ pip install cq-editor
 pip install -e ".[dev]"
 ```
 
-STL renderers (system packages):
-```bash
-sudo apt install f3d
-sudo apt install flatpak
-flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-sudo flatpak install flathub net.meshlab.MeshLab
-```
-
 **OrcaSlicer** (AppImage, for slicing and sending to printer):
 ```bash
-# Download v2.3.1 AppImage for Ubuntu 24.04
 curl -L -o ~/OrcaSlicer.AppImage \
   https://github.com/OrcaSlicer/OrcaSlicer/releases/download/v2.3.1/OrcaSlicer_Linux_AppImage_Ubuntu2404_V2.3.1.AppImage
 chmod +x ~/OrcaSlicer.AppImage
@@ -31,23 +22,18 @@ chmod +x ~/OrcaSlicer.AppImage
 
 **Interactive GUI** (live preview as you edit):
 ```bash
-cq-editor src/cq_models/bracket.py
+cq-editor src/cq_models/l_bracket.py
 ```
 
 **Export to STL:**
 ```bash
-bracket
+.venv/bin/l_bracket
+.venv/bin/t_bracket
 ```
 
 **Run tests:**
 ```bash
-pytest
-```
-
-**View the result:**
-```bash
-f3d bracket.stl                             # fast viewer
-flatpak run net.meshlab.MeshLab bracket.stl # mesh inspection
+.venv/bin/python -m pytest
 ```
 
 **Headless slice with OrcaSlicer** (Elegoo Centauri Carbon, 0.4mm, PETG Pro, 0.2mm layers):
@@ -58,7 +44,7 @@ MOUNT=$(ls -d /tmp/.mount_OrcaSl* | head -1)
 DISPLAY= ~/OrcaSlicer.AppImage \
   --load-settings "$MOUNT/resources/profiles/Elegoo/machine/ECC/Elegoo Centauri Carbon 0.4 nozzle.json;$MOUNT/resources/profiles/Elegoo/process/ECC/0.20mm Standard @Elegoo CC 0.4 nozzle.json" \
   --load-filaments "$MOUNT/resources/profiles/Elegoo/filament/EC/Elegoo PETG PRO @EC.json" \
-  --slice 0 --outputdir ./  bracket.stl
+  --slice 0 --outputdir ./ model.stl
 kill $MPID
 ```
 
@@ -66,7 +52,8 @@ kill $MPID
 
 ## Models
 
-| Module | Description |
-|--------|-------------|
-| `src/cq_models/bracket.py` | Parametric L-bracket with U-slot cuts per arm and a mounting loop at the outer corner |
-| `src/cq_models/u_cutter.py` | Reusable U-shaped cutter with wire-retention arms swept along the top and bottom edges |
+| Module | CLI | Description |
+|--------|-----|-------------|
+| `src/cq_models/l_bracket.py` | `l_bracket` | Parametric L-bracket with U-slot cuts per arm |
+| `src/cq_models/t_bracket.py` | `t_bracket` | T-bracket with three arms, each with U-slot cuts |
+| `src/cq_models/u_cutter.py` | — | Reusable U-shaped cutter with wire-retention arms |

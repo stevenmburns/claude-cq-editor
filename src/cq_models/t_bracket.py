@@ -35,18 +35,14 @@ def make_t_bracket(
         roundover_r: fillet radius on top/bottom face edges (mm), must be < height/2
     """
 
-    # Horizontal bar: 2×arm_len wide × arm_w tall
-    h_bar = (
-        cq.Workplane("XY")
-        .moveTo(arm_len, arm_w / 2)
-        .rect(2 * arm_len, arm_w)
-        .extrude(height)
-    )
+    # Origin = intersection of bar and stem centrelines.
+    # Horizontal bar: x: -arm_len → +arm_len, y: -arm_w/2 → +arm_w/2
+    h_bar = cq.Workplane("XY").rect(2 * arm_len, arm_w).extrude(height)
 
-    # Vertical stem: arm_w wide, arm_len tall, centred on the bar
+    # Vertical stem: x: -arm_w/2 → +arm_w/2, y: +arm_w/2 → +arm_w/2 + arm_len
     v_stem = (
         cq.Workplane("XY")
-        .moveTo(arm_len, arm_w + arm_len / 2)
+        .moveTo(0, arm_w / 2 + arm_len / 2)
         .rect(arm_w, arm_len)
         .extrude(height)
     )
@@ -54,43 +50,40 @@ def make_t_bracket(
     bracket = h_bar.union(v_stem).edges("|Z").fillet(fillet_r)
 
     # Loop at the bottom of the horizontal bar, opposite the stem
-    loop_cx = arm_len
-    loop_cy = loop_offset
-
-    loop_body = cq.Workplane("XY").moveTo(loop_cx, loop_cy).circle(10).extrude(height)
-    loop_cut = cq.Workplane("XY").moveTo(loop_cx, loop_cy).circle(6).extrude(height)
+    loop_body = (
+        cq.Workplane("XY").moveTo(0, loop_offset - arm_w / 2).circle(10).extrude(height)
+    )
+    loop_cut = (
+        cq.Workplane("XY").moveTo(0, loop_offset - arm_w / 2).circle(6).extrude(height)
+    )
 
     bracket = bracket.union(loop_body).cut(loop_cut)
 
     for face_sel in [">Z", "<Z"]:
         bracket = bracket.faces(face_sel).edges().fillet(roundover_r)
 
-    # U-cuts on left horizontal arm (x: 0 → arm_len, centred in y at arm_w/2)
+    # U-cuts on left horizontal arm (x: -arm_len → 0, centred in y at 0)
+    for i in range(n_cuts):
+        x = -arm_len + (i + 1) * arm_len / (n_cuts + 1)
+        bracket = bracket.cut(
+            make_u_cutter(height, body_w, body_d, slot_w, base_d).translate((x, 0, 0))
+        )
+
+    # U-cuts on right horizontal arm (x: 0 → +arm_len, centred in y at 0)
     for i in range(n_cuts):
         x = (i + 1) * arm_len / (n_cuts + 1)
         bracket = bracket.cut(
-            make_u_cutter(height, body_w, body_d, slot_w, base_d).translate(
-                (x, arm_w / 2, 0)
-            )
+            make_u_cutter(height, body_w, body_d, slot_w, base_d).translate((x, 0, 0))
         )
 
-    # U-cuts on right horizontal arm (x: arm_len → 2×arm_len, centred in y at arm_w/2)
-    for i in range(n_cuts):
-        x = arm_len + (i + 1) * arm_len / (n_cuts + 1)
-        bracket = bracket.cut(
-            make_u_cutter(height, body_w, body_d, slot_w, base_d).translate(
-                (x, arm_w / 2, 0)
-            )
-        )
-
-    # U-cuts on vertical stem arm (y: arm_w → arm_w + arm_len, centred in x at arm_len)
+    # U-cuts on vertical stem arm (y: arm_w/2 → arm_w/2 + arm_len, centred in x at 0)
     # Rotate -90° around Z so body_w runs along Y and body_d runs along X
     for i in range(n_cuts):
-        y = arm_w + (i + 1) * arm_len / (n_cuts + 1)
+        y = arm_w / 2 + (i + 1) * arm_len / (n_cuts + 1)
         bracket = bracket.cut(
             make_u_cutter(height, body_w, body_d, slot_w, base_d)
             .rotate((0, 0, 0), (0, 0, 1), -90)
-            .translate((arm_len, y, 0))
+            .translate((0, y, 0))
         )
 
     return bracket

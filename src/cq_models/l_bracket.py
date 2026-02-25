@@ -4,8 +4,8 @@ from cq_models.u_cutter import make_u_cutter
 
 
 def make_l_bracket(
-    outer=60,
-    inner=44,
+    arm_w=16,
+    arm_len=52,
     height=3,
     body_w=10,
     body_d=8,
@@ -18,44 +18,47 @@ def make_l_bracket(
 ):
     """Parametric L-bracket with U-slot cuts.
 
+    Origin is at the intersection of the two arm centrelines (centre of the
+    corner junction).  Each arm extends arm_len in the −X or −Y direction and
+    arm_w/2 in the +X/+Y direction to form the corner.
+
     Args:
-        outer: outer square side length (mm)
-        inner: inner cutout side length (mm)
+        arm_w: width (thickness) of each arm (mm)
+        arm_len: length of each arm from the centre junction to its tip (mm)
         height: bracket thickness (mm)
         body_w: U-cutter width along arm (mm)
         body_d: depth of cut into arm (mm)
         slot_w: slot opening width (mm)
         base_d: U base thickness — closed end of U (mm)
-        n_cuts: number of U-cuts per arm, equally spaced along the arm
-        (cut_offset is derived as (outer - inner) / 2 — not a parameter)
-        loop_offset: distance the loop center is set back from the outer corner of the bracket (mm)
+        n_cuts: number of U-cuts per arm, equally spaced along each arm
+        loop_offset: distance the loop center is set back from the outer corner (mm)
         fillet_r: fillet radius on vertical corners (mm)
         roundover_r: fillet radius on top/bottom face edges (mm), must be < height/2
     """
-    outer_body = (
+    # Origin = intersection of the two arm centrelines.
+    # Horizontal arm: x: -arm_len → +arm_w/2, y: -arm_w/2 → +arm_w/2
+    h_arm = (
         cq.Workplane("XY")
-        .moveTo(outer / 2, outer / 2)
-        .rect(outer, outer)
+        .moveTo((-arm_len + arm_w / 2) / 2, 0)
+        .rect(arm_len + arm_w / 2, arm_w)
         .extrude(height)
     )
 
-    inner_body = (
+    # Vertical arm: y: -arm_len → +arm_w/2, x: -arm_w/2 → +arm_w/2
+    v_arm = (
         cq.Workplane("XY")
-        .moveTo(inner / 2, inner / 2)
-        .rect(inner, inner)
+        .moveTo(0, (-arm_len + arm_w / 2) / 2)
+        .rect(arm_w, arm_len + arm_w / 2)
         .extrude(height)
     )
 
-    cut_offset = (outer - inner) / 2
+    bracket = h_arm.union(v_arm).edges("|Z").fillet(fillet_r)
 
-    bracket = outer_body.cut(inner_body).edges("|Z").fillet(fillet_r)
-
-    # Add loop on end
-    loop_cx = outer - loop_offset
-    loop_cy = outer - loop_offset
+    # Loop at the outer corner of the junction
+    loop_cx = arm_w / 2 - loop_offset
+    loop_cy = arm_w / 2 - loop_offset
 
     loop_body = cq.Workplane("XY").moveTo(loop_cx, loop_cy).circle(10).extrude(height)
-
     loop_cut = cq.Workplane("XY").moveTo(loop_cx, loop_cy).circle(6).extrude(height)
 
     bracket = bracket.union(loop_body).cut(loop_cut)
@@ -63,20 +66,21 @@ def make_l_bracket(
     for face_sel in [">Z", "<Z"]:
         bracket = bracket.faces(face_sel).edges().fillet(roundover_r)
 
+    # U-cuts on horizontal arm (x: -arm_len → 0, centred in y at 0)
     for i in range(n_cuts):
-        x = (i + 0.75) * outer / (n_cuts + 1)
+        x = -arm_len + (i + 1) * arm_len / (n_cuts + 1)
         bracket = bracket.cut(
-            make_u_cutter(height, body_w, body_d, slot_w, base_d).translate(
-                (x, inner + cut_offset, 0)
-            )
+            make_u_cutter(height, body_w, body_d, slot_w, base_d).translate((x, 0, 0))
         )
 
+    # U-cuts on vertical arm (y: -arm_len → 0, centred in x at 0)
+    # Rotate -90° around Z so body_w runs along Y and body_d runs along X
     for i in range(n_cuts):
-        y = (i + 0.75) * outer / (n_cuts + 1)
+        y = -arm_len + (i + 1) * arm_len / (n_cuts + 1)
         bracket = bracket.cut(
             make_u_cutter(height, body_w, body_d, slot_w, base_d)
             .rotate((0, 0, 0), (0, 0, 1), -90)
-            .translate((inner + cut_offset, y, 0))
+            .translate((0, y, 0))
         )
 
     return bracket
