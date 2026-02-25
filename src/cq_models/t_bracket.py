@@ -73,7 +73,7 @@ def make_t_bracket(
 
     # U-cuts on left horizontal arm (x: 0 → arm_len, centred in y at cut_offset)
     for i in range(n_cuts):
-        x = (i + 0.75) * arm_len / (n_cuts + 1)
+        x = (i + 1) * arm_len / (n_cuts + 1)
         bracket = bracket.cut(
             make_u_cutter(height, body_w, body_d, slot_w, base_d).translate(
                 (x, cut_offset, 0)
@@ -82,7 +82,7 @@ def make_t_bracket(
 
     # U-cuts on right horizontal arm (x: arm_len → 2×arm_len, centred in y at cut_offset)
     for i in range(n_cuts):
-        x = arm_len + (i + 0.75) * arm_len / (n_cuts + 1)
+        x = arm_len + (i + 1) * arm_len / (n_cuts + 1)
         bracket = bracket.cut(
             make_u_cutter(height, body_w, body_d, slot_w, base_d).translate(
                 (x, cut_offset, 0)
@@ -92,7 +92,7 @@ def make_t_bracket(
     # U-cuts on vertical stem arm (y: arm_w → arm_w + arm_len, centred in x at arm_len)
     # Rotate -90° around Z so body_w runs along Y and body_d runs along X
     for i in range(n_cuts):
-        y = arm_w + (i + 0.75) * arm_len / (n_cuts + 1)
+        y = arm_w + (i + 1) * arm_len / (n_cuts + 1)
         bracket = bracket.cut(
             make_u_cutter(height, body_w, body_d, slot_w, base_d)
             .rotate((0, 0, 0), (0, 0, 1), -90)
