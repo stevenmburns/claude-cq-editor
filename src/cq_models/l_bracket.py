@@ -3,7 +3,7 @@ import cadquery as cq
 from cq_models.u_cutter import make_u_cutter
 
 
-def make_bracket(
+def make_l_bracket(
     outer=60,
     inner=44,
     height=3,
@@ -50,25 +50,13 @@ def make_bracket(
 
     bracket = outer_body.cut(inner_body).edges("|Z").fillet(fillet_r)
 
-
-
     # Add loop on end
     loop_cx = outer - loop_offset
     loop_cy = outer - loop_offset
 
-    loop_body = (
-        cq.Workplane("XY")
-        .moveTo(loop_cx, loop_cy)
-        .circle(10)
-        .extrude(height)
-    )
+    loop_body = cq.Workplane("XY").moveTo(loop_cx, loop_cy).circle(10).extrude(height)
 
-    loop_cut = (
-        cq.Workplane("XY")
-        .moveTo(loop_cx, loop_cy)
-        .circle(6)
-        .extrude(height)
-    )
+    loop_cut = cq.Workplane("XY").moveTo(loop_cx, loop_cy).circle(6).extrude(height)
 
     bracket = bracket.union(loop_body).cut(loop_cut)
 
@@ -78,8 +66,9 @@ def make_bracket(
     for i in range(n_cuts):
         x = (i + 0.75) * outer / (n_cuts + 1)
         bracket = bracket.cut(
-            make_u_cutter(height, body_w, body_d, slot_w, base_d)
-            .translate((x, inner + cut_offset, 0))
+            make_u_cutter(height, body_w, body_d, slot_w, base_d).translate(
+                (x, inner + cut_offset, 0)
+            )
         )
 
     for i in range(n_cuts):
@@ -96,12 +85,12 @@ def make_bracket(
 # show_object is injected by cq-editor; this guard displays the model
 # in the GUI without building it on plain import or test runs.
 if "show_object" in dir():
-    show_object(make_bracket())  # noqa: F821
+    show_object(make_l_bracket())  # noqa: F821
 
 
 def main():
-    result = make_bracket()
-    cq.exporters.export(result, "bracket.stl")
+    result = make_l_bracket()
+    cq.exporters.export(result, "l_bracket.stl")
 
 
 if __name__ == "__main__":
