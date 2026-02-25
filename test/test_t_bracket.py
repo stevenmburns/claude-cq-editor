@@ -12,10 +12,10 @@ def test_bounding_box_matches_params():
     bb = result.val().BoundingBox()
     arm_w = outer - inner  # 16
     stem_len = outer / 2  # 30
-    loop_offset = 5  # default
-    # loop centre at (outer/2, loop_offset) = (30, 5), radius=10
+    loop_offset = 0  # default
+    # loop centre at (outer/2, loop_offset) = (30, 0), radius=10
     # x: bar dominates → 0 to outer = 60
-    # y: loop bottom at loop_offset - 10 = -5, stem top at arm_w + stem_len = 46
+    # y: loop bottom at loop_offset - 10 = -10, stem top at arm_w + stem_len = 46
     assert abs(bb.xlen - outer) < 0.5
     assert abs(bb.ylen - (arm_w + stem_len + 10 - loop_offset)) < 0.5
     assert abs(bb.zlen - height) < 0.1

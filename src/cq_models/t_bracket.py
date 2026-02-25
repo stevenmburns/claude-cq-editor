@@ -12,7 +12,7 @@ def make_t_bracket(
     slot_w=5,
     base_d=2,
     n_cuts=2,
-    loop_offset=5,
+    loop_offset=0,
     fillet_r=3,
     roundover_r=1,
 ):
