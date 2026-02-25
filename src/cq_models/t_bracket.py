@@ -7,6 +7,7 @@ def make_t_bracket(
     outer=60,
     inner=44,
     height=3,
+    arm_len=60,
     body_w=10,
     body_d=8,
     slot_w=5,
@@ -18,13 +19,14 @@ def make_t_bracket(
 ):
     """Parametric T-bracket with U-slot cuts on each of the three arms.
 
-    The T is oriented with a horizontal bar (full outer width) at the base and a
-    vertical stem rising from the center.  Three arm ends: left, right, and top.
+    The T is oriented with a horizontal bar at the base and a vertical stem
+    rising from the center.  Three arm ends: left, right, and top.
 
     Args:
-        outer: horizontal span of the bar, and 2× the stem length (mm)
-        inner: derives arm width as outer - inner (mm)
+        outer: controls arm thickness as outer - inner (mm)
+        inner: controls arm thickness as outer - inner (mm)
         height: bracket thickness (mm)
+        arm_len: length of each arm from the centre junction (mm)
         body_w: U-cutter width along arm (mm)
         body_d: depth of cut into arm (mm)
         slot_w: slot opening width (mm)
@@ -38,28 +40,27 @@ def make_t_bracket(
     cut_offset = (
         arm_w / 2
     )  # distance from arm face to cutter centre (same as L-bracket)
-    stem_len = outer / 2  # length of vertical stem above the bar
 
-    # Horizontal bar: full width × arm_w tall
+    # Horizontal bar: 2×arm_len wide × arm_w tall
     h_bar = (
         cq.Workplane("XY")
-        .moveTo(outer / 2, arm_w / 2)
-        .rect(outer, arm_w)
+        .moveTo(arm_len, arm_w / 2)
+        .rect(2 * arm_len, arm_w)
         .extrude(height)
     )
 
-    # Vertical stem: arm_w wide, stem_len tall, centred on the bar
+    # Vertical stem: arm_w wide, arm_len tall, centred on the bar
     v_stem = (
         cq.Workplane("XY")
-        .moveTo(outer / 2, arm_w + stem_len / 2)
-        .rect(arm_w, stem_len)
+        .moveTo(arm_len, arm_w + arm_len / 2)
+        .rect(arm_w, arm_len)
         .extrude(height)
     )
 
     bracket = h_bar.union(v_stem).edges("|Z").fillet(fillet_r)
 
     # Loop at the bottom of the horizontal bar, opposite the stem
-    loop_cx = outer / 2
+    loop_cx = arm_len
     loop_cy = loop_offset
 
     loop_body = cq.Workplane("XY").moveTo(loop_cx, loop_cy).circle(10).extrude(height)
@@ -70,32 +71,32 @@ def make_t_bracket(
     for face_sel in [">Z", "<Z"]:
         bracket = bracket.faces(face_sel).edges().fillet(roundover_r)
 
-    # U-cuts on left horizontal arm (x: 0 → outer/2, centred in y at cut_offset)
+    # U-cuts on left horizontal arm (x: 0 → arm_len, centred in y at cut_offset)
     for i in range(n_cuts):
-        x = (i + 0.75) * (outer / 2) / (n_cuts + 1)
+        x = (i + 0.75) * arm_len / (n_cuts + 1)
         bracket = bracket.cut(
             make_u_cutter(height, body_w, body_d, slot_w, base_d).translate(
                 (x, cut_offset, 0)
             )
         )
 
-    # U-cuts on right horizontal arm (x: outer/2 → outer, centred in y at cut_offset)
+    # U-cuts on right horizontal arm (x: arm_len → 2×arm_len, centred in y at cut_offset)
     for i in range(n_cuts):
-        x = outer / 2 + (i + 0.75) * (outer / 2) / (n_cuts + 1)
+        x = arm_len + (i + 0.75) * arm_len / (n_cuts + 1)
         bracket = bracket.cut(
             make_u_cutter(height, body_w, body_d, slot_w, base_d).translate(
                 (x, cut_offset, 0)
             )
         )
 
-    # U-cuts on vertical stem arm (y: arm_w → arm_w + stem_len, centred in x at outer/2)
+    # U-cuts on vertical stem arm (y: arm_w → arm_w + arm_len, centred in x at arm_len)
     # Rotate -90° around Z so body_w runs along Y and body_d runs along X
     for i in range(n_cuts):
-        y = arm_w + (i + 0.75) * stem_len / (n_cuts + 1)
+        y = arm_w + (i + 0.75) * arm_len / (n_cuts + 1)
         bracket = bracket.cut(
             make_u_cutter(height, body_w, body_d, slot_w, base_d)
             .rotate((0, 0, 0), (0, 0, 1), -90)
-            .translate((outer / 2, y, 0))
+            .translate((arm_len, y, 0))
         )
 
     return bracket
