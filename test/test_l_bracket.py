@@ -34,3 +34,15 @@ def test_volume_positive():
 def test_custom_params_produce_valid_bracket():
     result = make_l_bracket(arm_w=30, arm_len=65, height=5)
     assert result.val().isValid()
+
+
+def test_explicit_offsets_produce_valid_bracket():
+    result = make_l_bracket(start_offset=10, end_offset=10, n_cuts=3)
+    assert result.val().isValid()
+    assert result.val().Volume() > 0
+
+
+def test_n_cuts_1_is_valid():
+    result = make_l_bracket(n_cuts=1)
+    assert result.val().isValid()
+    assert result.val().Volume() > 0
