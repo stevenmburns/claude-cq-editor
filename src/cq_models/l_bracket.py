@@ -5,13 +5,15 @@ from cq_models.u_cutter import make_u_cutter
 
 def make_l_bracket(
     arm_w=16,
-    arm_len=52,
+    arm_len=60,
     height=3,
     body_w=10,
     body_d=8,
     slot_w=5,
     base_d=2,
     n_cuts=2,
+    start_offset=20,
+    end_offset=15,
     loop_offset=5,
     fillet_r=3,
     roundover_r=1,
@@ -30,7 +32,9 @@ def make_l_bracket(
         body_d: depth of cut into arm (mm)
         slot_w: slot opening width (mm)
         base_d: U base thickness — closed end of U (mm)
-        n_cuts: number of U-cuts per arm, equally spaced along each arm
+        n_cuts: number of U-cuts per arm
+        start_offset: distance from arm origin (junction) to center of first cut (mm)
+        end_offset: distance from arm tip to center of last cut (mm)
         loop_offset: distance the loop center is set back from the outer corner (mm)
         fillet_r: fillet radius on vertical corners (mm)
         roundover_r: fillet radius on top/bottom face edges (mm), must be < height/2
@@ -66,9 +70,11 @@ def make_l_bracket(
     for face_sel in [">Z", "<Z"]:
         bracket = bracket.faces(face_sel).edges().fillet(roundover_r)
 
+    pitch = (arm_len - start_offset - end_offset) / (n_cuts - 1) if n_cuts > 1 else 0
+
     # U-cuts on horizontal arm (x: -arm_len → 0, centred in y at 0)
     for i in range(n_cuts):
-        x = -arm_len + (i + 1) * arm_len / (n_cuts + 1)
+        x = -(start_offset + i * pitch)
         bracket = bracket.cut(
             make_u_cutter(height, body_w, body_d, slot_w, base_d).translate((x, 0, 0))
         )
@@ -76,7 +82,7 @@ def make_l_bracket(
     # U-cuts on vertical arm (y: -arm_len → 0, centred in x at 0)
     # Rotate -90° around Z so body_w runs along Y and body_d runs along X
     for i in range(n_cuts):
-        y = -arm_len + (i + 1) * arm_len / (n_cuts + 1)
+        y = -(start_offset + i * pitch)
         bracket = bracket.cut(
             make_u_cutter(height, body_w, body_d, slot_w, base_d)
             .rotate((0, 0, 0), (0, 0, 1), -90)
