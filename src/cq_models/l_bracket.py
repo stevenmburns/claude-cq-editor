@@ -1,6 +1,6 @@
-import cadquery as cq
+import math
 
-from cq_models.u_cutter import make_u_cutter
+import cadquery as cq
 
 
 def make_l_bracket(
@@ -17,12 +17,14 @@ def make_l_bracket(
     loop_offset=5,
     fillet_r=3,
     roundover_r=1,
+    arm_angle=90,
 ):
     """Parametric L-bracket with U-slot cuts.
 
     Origin is at the intersection of the two arm centrelines (centre of the
-    corner junction).  Each arm extends arm_len in the −X or −Y direction and
-    arm_w/2 in the +X/+Y direction to form the corner.
+    corner junction).  The first arm extends along +X; the second arm extends
+    at arm_angle degrees CCW from +X.  Each arm extends arm_len from the origin
+    and arm_w/2 in the opposite direction to form the corner junction.
 
     Args:
         arm_w: width (thickness) of each arm (mm)
@@ -38,33 +40,36 @@ def make_l_bracket(
         loop_offset: distance the loop center is set back from the outer corner (mm)
         fillet_r: fillet radius on vertical corners (mm)
         roundover_r: fillet radius on top/bottom face edges (mm), must be < height/2
+        arm_angle: angle between the two arms in degrees (default 90)
     """
-    # Origin = intersection of the two arm centrelines.
-    # Horizontal arm: x: -arm_len → +arm_w/2, y: -arm_w/2 → +arm_w/2
-    h_arm = (
-        cq.Workplane("XY")
-        .moveTo((-arm_len + arm_w / 2) / 2, 0)
-        .rect(arm_len + arm_w / 2, arm_w)
-        .extrude(height)
-    )
+    arm_angle_rad = math.radians(arm_angle)
 
-    # Vertical arm: y: -arm_len → +arm_w/2, x: -arm_w/2 → +arm_w/2
-    v_arm = (
-        cq.Workplane("XY")
-        .moveTo(0, (-arm_len + arm_w / 2) / 2)
-        .rect(arm_w, arm_len + arm_w / 2)
-        .extrude(height)
-    )
+    # Arm slab: x: 0 → +arm_len, y: -arm_w/2 → +arm_w/2
+    def _arm_slab():
+        return (
+            cq.Workplane("XY")
+            .moveTo(arm_len / 2, 0)
+            .rect(arm_len, arm_w)
+            .extrude(height)
+        )
 
-    bracket = h_arm.union(v_arm).edges("|Z").fillet(fillet_r)
+    h_arm = _arm_slab()
+    v_arm = _arm_slab().rotate((0, 0, 0), (0, 0, 1), arm_angle)
+    disk = cq.Workplane("XY").circle(arm_w / 2).extrude(height)
 
-    # Loop at the outer corner of the junction
-    loop_cx = arm_w / 2 - loop_offset
-    loop_cy = arm_w / 2 - loop_offset
+    from cq_models.u_cutter import make_u_cutter
+
+    bracket = h_arm.union(v_arm).union(disk)
+    bracket = bracket.edges("|Z").fillet(fillet_r)
+
+    # Loop at the outer corner of the junction (along the exterior bisector)
+    bisector_rad = math.radians(arm_angle / 2)
+    loop_dist = math.sqrt(2) * (arm_w / 2 - loop_offset)
+    loop_cx = -loop_dist * math.cos(bisector_rad)
+    loop_cy = -loop_dist * math.sin(bisector_rad)
 
     loop_body = cq.Workplane("XY").moveTo(loop_cx, loop_cy).circle(10).extrude(height)
     loop_cut = cq.Workplane("XY").moveTo(loop_cx, loop_cy).circle(6).extrude(height)
-
     bracket = bracket.union(loop_body).cut(loop_cut)
 
     for face_sel in [">Z", "<Z"]:
@@ -72,21 +77,22 @@ def make_l_bracket(
 
     pitch = (arm_len - start_offset - end_offset) / (n_cuts - 1) if n_cuts > 1 else 0
 
-    # U-cuts on horizontal arm (x: -arm_len → 0, centred in y at 0)
+    # U-cuts on horizontal arm (+X direction)
     for i in range(n_cuts):
-        x = -(start_offset + i * pitch)
+        x = start_offset + i * pitch
         bracket = bracket.cut(
             make_u_cutter(height, body_w, body_d, slot_w, base_d).translate((x, 0, 0))
         )
 
-    # U-cuts on vertical arm (y: -arm_len → 0, centred in x at 0)
-    # Rotate -90° around Z so body_w runs along Y and body_d runs along X
+    # U-cuts on second arm (along arm_angle direction)
     for i in range(n_cuts):
-        y = -(start_offset + i * pitch)
+        d = start_offset + i * pitch
+        tx = d * math.cos(arm_angle_rad)
+        ty = d * math.sin(arm_angle_rad)
         bracket = bracket.cut(
             make_u_cutter(height, body_w, body_d, slot_w, base_d)
-            .rotate((0, 0, 0), (0, 0, 1), -90)
-            .translate((0, y, 0))
+            .rotate((0, 0, 0), (0, 0, 1), arm_angle)
+            .translate((tx, ty, 0))
         )
 
     return bracket
@@ -99,8 +105,49 @@ if "show_object" in dir():
 
 
 def main():
-    result = make_l_bracket()
-    cq.exporters.export(result, "l_bracket.stl")
+    import argparse
+
+    p = argparse.ArgumentParser(description="Export an L-bracket STL")
+    p.add_argument(
+        "--arm-angle",
+        type=float,
+        default=90,
+        help="Angle between arms in degrees (default: 90)",
+    )
+    p.add_argument(
+        "--arm-len",
+        type=float,
+        default=60,
+        help="Arm length from junction to tip in mm (default: 60)",
+    )
+    p.add_argument(
+        "--arm-w",
+        type=float,
+        default=16,
+        help="Arm width/thickness in mm (default: 16)",
+    )
+    p.add_argument(
+        "--height", type=float, default=3, help="Bracket thickness in mm (default: 3)"
+    )
+    p.add_argument(
+        "--n-cuts", type=int, default=2, help="Number of U-cuts per arm (default: 2)"
+    )
+    p.add_argument(
+        "--output",
+        default="l_bracket.stl",
+        help="Output STL filename (default: l_bracket.stl)",
+    )
+    args = p.parse_args()
+
+    result = make_l_bracket(
+        arm_angle=args.arm_angle,
+        arm_len=args.arm_len,
+        arm_w=args.arm_w,
+        height=args.height,
+        n_cuts=args.n_cuts,
+    )
+    cq.exporters.export(result, args.output)
+    print(f"Exported {args.output}")
 
 
 if __name__ == "__main__":
