@@ -7,7 +7,7 @@ def test_default_u_cutter_is_valid():
 
 
 def test_bounding_box_matches_params():
-    height, body_w, body_d = 3, 10, 8
+    height, body_w, body_d = 3, 10, 9
     extend_wire, wire_radius = 4, 1.5
     result = make_u_cutter(height=height, body_w=body_w, body_d=body_d)
     bb = result.val().BoundingBox()

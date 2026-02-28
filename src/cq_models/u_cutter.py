@@ -1,7 +1,7 @@
 import cadquery as cq
 
 
-def make_u_cutter(height=3, body_w=10, body_d=8, slot_w=5, base_d=2):
+def make_u_cutter(height=3, body_w=10, body_d=9, slot_w=5, base_d=2.5):
     """U-shaped cutter profile centered on the origin.
 
     The body is centered at y=0, so the open face is at y=-body_d/2
