@@ -1,47 +1,60 @@
+import math
+
 import cadquery as cq
 
 
 def make_gravity_well(
     disc_r=60.0,
-    well_r=40.0,
-    depth=15.0,
+    rs=8.0,
+    depth=35.0,
     base_t=3.0,
-    n_pts=50,
+    n_pts=60,
 ):
-    """Gravity well — disc with a parabolic central depression.
+    """Gravity well — Flamm's paraboloid disc with central event-horizon hole.
 
-    Models the classic rubber-sheet analogy used to visualise spacetime
-    curvature in general relativity.  A flat disc of radius disc_r has a
-    smooth parabolic funnel of radius well_r depressed depth mm below
-    the flat rim surface.
+    Models the spacetime curvature embedding diagram used to visualise a
+    black hole or massive star in general relativity.  The funnel profile
+    follows a square-root (Flamm) curve that is nearly vertical at the inner
+    edge rs (the "event horizon") and flares out to flat at disc_r.  A
+    cylindrical hole of radius rs at the centre represents the region where
+    the embedding breaks down.
+
+    Profile: z(r) = -depth * (1 - sqrt((r - rs) / (disc_r - rs)))
 
     Args:
         disc_r: overall disc radius (mm)
-        well_r: radius of the parabolic funnel (mm), must be < disc_r
-        depth: funnel depth at centre (mm)
+        rs: event-horizon radius — inner hole radius and funnel base (mm)
+        depth: funnel depth at the inner edge (mm)
         base_t: solid floor thickness under the funnel (mm)
-        n_pts: number of spline points on the funnel curve
+        n_pts: spline resolution (more = smoother near the steep inner edge)
     """
     d = depth
-    wr = well_r
 
-    # Parabolic funnel: z(r) = -d*(1 - (r/wr)^2), r in [0, wr]
-    # At r=0 → z=-d;  at r=wr → z=0
-    r_step = wr / (n_pts - 1)
-    funnel_pts = [
-        (i * r_step, -d * (1 - (i * r_step / wr) ** 2)) for i in range(1, n_pts)
-    ]
+    # Quadratic r-spacing concentrates points near rs where the slope is steepest.
+    # r_vals runs from just above rs to disc_r (the moveTo provides the rs start).
+    r_vals = [rs + (disc_r - rs) * (i / (n_pts - 1)) ** 2 for i in range(1, n_pts)]
+    funnel_pts = [(r, -d * (1.0 - math.sqrt((r - rs) / (disc_r - rs)))) for r in r_vals]
+    # funnel_pts[0]  ≈ (rs + ε, -depth + ε)  — near bottom of the well
+    # funnel_pts[-1] = (disc_r, 0)            — flat outer rim
 
     # Closed profile in the XZ plane (local x = radial, local y = world Z).
-    # Revolved 360° around the world Z axis (local (0,0)→(0,1)).
+    # Revolved 360° around world Z (local axis (0,0)→(0,1)).
+    #
+    # Shape cross-section (r increasing left → right):
+    #
+    #                              ___________  ← z=0  (outer flat rim)
+    #   steep                    /
+    #   inner  \________________/              ← Flamm curve
+    #   wall   |                |
+    #          |________________|              ← z=-(depth+base_t) flat floor
+    #          rs               disc_r
     profile = (
         cq.Workplane("XZ")
-        .moveTo(0, -d)  # funnel centre (deepest point)
-        .spline(funnel_pts)  # parabolic curve up to funnel rim
-        .lineTo(disc_r, 0)  # flat annular top surface
-        .lineTo(disc_r, -(d + base_t))  # outer wall
-        .lineTo(0, -(d + base_t))  # flat bottom
-        .close()  # up the central axis back to start
+        .moveTo(rs, -d)  # top of inner cylindrical wall
+        .spline(funnel_pts)  # Flamm curve up to outer rim
+        .lineTo(disc_r, -(d + base_t))  # outer wall down
+        .lineTo(rs, -(d + base_t))  # flat floor inward
+        .close()  # up the inner wall back to start
     )
 
     return profile.revolve(360, (0, 0), (0, 1))
